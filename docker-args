@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
+
+STDIN=$(cat)
+APP="$1"; IMAGE_SOURCE_TYPE="$2"
+
+
+# Ensure the .dokku-git-rev file actually exists
+[[ ! -f "$DOKKU_ROOT/$APP/.dokku-git-rev" ]] && exit 0
+
+# Select the flag to use to add var to the environment
+if [[ "$0" == "docker-args-build" && "$IMAGE_SOURCE_TYPE" == "dockerfile" ]]; then
+  ARGNAME="--build-arg"
+else
+  ARGNAME="-e"
+fi
+
+# Grab the REV
+GIT_REV=$(tail -1 "$DOKKU_ROOT/$APP/.dokku-git-rev")
+
+# Add GIT_REV to the docker build args
+echo "$STDIN $ARGNAME GIT_REV=$GIT_REV"
